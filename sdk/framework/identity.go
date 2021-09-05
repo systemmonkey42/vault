@@ -12,18 +12,18 @@ import (
 // instance of system view. It will query system view for information about the
 // entity and use the resulting identity information to populate the template
 // string.
-func PopulateIdentityTemplate(tpl string, entityID string, sysView logical.SystemView) (string, error) {
+func PopulateIdentityTemplate(tpl string, entityID string, sysView logical.SystemView) ([]string, error) {
 	entity, err := sysView.EntityInfo(entityID)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if entity == nil {
-		return "", errors.New("no entity found")
+		return nil, errors.New("no entity found")
 	}
 
 	groups, err := sysView.GroupsForEntity(entityID)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	input := identitytpl.PopulateStringInput{
@@ -35,7 +35,7 @@ func PopulateIdentityTemplate(tpl string, entityID string, sysView logical.Syste
 
 	_, out, err := identitytpl.PopulateString(input)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	return out, nil

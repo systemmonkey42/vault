@@ -227,7 +227,7 @@ func (b *backend) calculateValidPrincipals(data *framework.FieldData, req *logic
 					templatePrincipal, err := framework.PopulateIdentityTemplate(principal, req.EntityID, b.System())
 					if err == nil {
 						// Template returned a principal
-						allowedPrincipals = append(allowedPrincipals, templatePrincipal)
+						allowedPrincipals = append(allowedPrincipals, templatePrincipal...)
 					} else {
 						return nil, fmt.Errorf("template '%s' could not be rendered -> %s", principal, err)
 					}
@@ -387,9 +387,9 @@ func (b *backend) calculateExtensions(data *framework.FieldData, req *logical.Re
 				if req.EntityID != "" {
 					// Retrieve extension value based on template + entityID from request.
 					templateExtensionValue, err := framework.PopulateIdentityTemplate(extensionValue, req.EntityID, b.System())
-					if err == nil {
+					if err == nil && templateExtensionValue != nil && len(templateExtensionValue) > 0 {
 						// Template returned an extension value that we can use
-						extensions[extensionKey] = templateExtensionValue
+						extensions[extensionKey] = templateExtensionValue[0]
 					} else {
 						return nil, fmt.Errorf("template '%s' could not be rendered -> %s", extensionValue, err)
 					}

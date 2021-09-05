@@ -881,9 +881,9 @@ func (tok *idToken) generatePayload(logger hclog.Logger, template string, entity
 		logger.Warn("error populating OIDC token template", "template", template, "error", err)
 	}
 
-	if populatedTemplate != "" {
+	if populatedTemplate != nil && len(populatedTemplate) > 0 {
 		var parsed map[string]interface{}
-		if err := json.Unmarshal([]byte(populatedTemplate), &parsed); err != nil {
+		if err := json.Unmarshal([]byte(populatedTemplate[0]), &parsed); err != nil {
 			logger.Warn("error parsing OIDC template", "template", template, "err", err)
 		}
 
@@ -986,14 +986,16 @@ func (i *IdentityStore) pathOIDCCreateUpdateRole(ctx context.Context, req *logic
 		}
 
 		var tmp map[string]interface{}
-		if err := json.Unmarshal([]byte(populatedTemplate), &tmp); err != nil {
-			return logical.ErrorResponse("error parsing template JSON: %s", err.Error()), nil
-		}
+		if populatedTemplate != nil && len(populatedTemplate) > 0 {
+			if err := json.Unmarshal([]byte(populatedTemplate[0]), &tmp); err != nil {
+				return logical.ErrorResponse("error parsing template JSON: %s", err.Error()), nil
+			}
 
-		for key := range tmp {
-			if strutil.StrListContains(requiredClaims, key) {
-				return logical.ErrorResponse(`top level key %q not allowed. Restricted keys: %s`,
-					key, strings.Join(requiredClaims, ", ")), nil
+			for key := range tmp {
+				if strutil.StrListContains(requiredClaims, key) {
+					return logical.ErrorResponse(`top level key %q not allowed. Restricted keys: %s`,
+						key, strings.Join(requiredClaims, ", ")), nil
+				}
 			}
 		}
 	}

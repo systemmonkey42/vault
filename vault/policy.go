@@ -297,7 +297,7 @@ func parsePaths(result *Policy, list *ast.ObjectList, performTemplating bool, en
 			if err != nil {
 				continue
 			}
-			key = templated
+			key = templated[0]
 		} else {
 			hasTemplating, _, err := identitytpl.PopulateString(identitytpl.PopulateStringInput{
 				Mode:              identitytpl.ACLTemplating,

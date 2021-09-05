@@ -321,7 +321,9 @@ func validateNames(b *backend, data *inputBundle, names []string) string {
 							continue
 						}
 
-						currDomain = tmpCurrDomain
+						if tmpCurrDomain != nil && len(tmpCurrDomain) > 0 {
+							currDomain = tmpCurrDomain[0]
+						}
 					}
 				}
 

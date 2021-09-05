@@ -531,15 +531,17 @@ func (i *IdentityStore) pathOIDCCreateUpdateScope(ctx context.Context, req *logi
 			return logical.ErrorResponse("error parsing template: %s", err.Error()), nil
 		}
 
-		var tmp map[string]interface{}
-		if err := json.Unmarshal([]byte(populatedTemplate), &tmp); err != nil {
-			return logical.ErrorResponse("error parsing template JSON: %s", err.Error()), nil
-		}
+		if populatedTemplate != nil && len(populatedTemplate) > 0 {
+			var tmp map[string]interface{}
+			if err := json.Unmarshal([]byte(populatedTemplate[0]), &tmp); err != nil {
+				return logical.ErrorResponse("error parsing template JSON: %s", err.Error()), nil
+			}
 
-		for key := range tmp {
-			if strutil.StrListContains(requiredClaims, key) {
-				return logical.ErrorResponse(`top level key %q not allowed. Restricted keys: %s`,
-					key, strings.Join(requiredClaims, ", ")), nil
+			for key := range tmp {
+				if strutil.StrListContains(requiredClaims, key) {
+					return logical.ErrorResponse(`top level key %q not allowed. Restricted keys: %s`,
+						key, strings.Join(requiredClaims, ", ")), nil
+				}
 			}
 		}
 	}
@@ -890,20 +892,22 @@ func (i *IdentityStore) pathOIDCCreateUpdateProvider(ctx context.Context, req *l
 			return nil, fmt.Errorf("error parsing template for scope %q: %s", scopeName, err.Error())
 		}
 
-		jsonTemplate := make(map[string]interface{})
-		if err = json.Unmarshal([]byte(populatedTemplate), &jsonTemplate); err != nil {
-			return nil, err
-		}
-
-		for keyName := range jsonTemplate {
-			val, ok := scopeTemplateKeyNames[keyName]
-			if ok && val != scopeName {
-				resp.AddWarning(fmt.Sprintf("Found scope templates with conflicting top-level keys: "+
-					"conflict %q in scopes %q, %q. This may result in an error if the scopes are "+
-					"requested in an OIDC Authentication Request.", keyName, scopeName, val))
+		if populatedTemplate != nil && len(populatedTemplate) > 0 {
+			jsonTemplate := make(map[string]interface{})
+			if err = json.Unmarshal([]byte(populatedTemplate[0]), &jsonTemplate); err != nil {
+				return nil, err
 			}
 
-			scopeTemplateKeyNames[keyName] = scopeName
+			for keyName := range jsonTemplate {
+				val, ok := scopeTemplateKeyNames[keyName]
+				if ok && val != scopeName {
+					resp.AddWarning(fmt.Sprintf("Found scope templates with conflicting top-level keys: "+
+						"conflict %q in scopes %q, %q. This may result in an error if the scopes are "+
+						"requested in an OIDC Authentication Request.", keyName, scopeName, val))
+				}
+
+				scopeTemplateKeyNames[keyName] = scopeName
+			}
 		}
 	}
 
